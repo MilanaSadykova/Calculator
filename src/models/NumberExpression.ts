@@ -1,9 +1,9 @@
-import { Expression } from "./Expression";
-import { NumberContainer } from "./NumberContainer";
+import { Expression, ExpressionType } from "./Expression";
 
 /**
  * Expression interface extension for numbers.
  */
 export interface NumberExpression extends Expression {
-    value: NumberContainer,
+    type: ExpressionType.NUMBER;
+    value: number,
 }

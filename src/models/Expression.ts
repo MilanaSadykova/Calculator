@@ -1,9 +1,14 @@
-import { NumberContainer } from "./NumberContainer";
 import { Operator } from "./Operator.enum";
+
+export enum ExpressionType {
+    NUMBER = 'number',
+    OPERATOR = 'operator',
+}
 
 /**
  * Common interface for numbers and operators expressions.
  */
 export interface Expression {
-    value: NumberContainer | Operator;
+    type: ExpressionType;
+    value: number | Operator;
 }
