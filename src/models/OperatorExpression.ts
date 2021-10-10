@@ -8,5 +8,4 @@ import { Operator } from "./Operator.enum";
 export interface OperatorExpression extends Expression {
     type: ExpressionType.OPERATOR;
     value: Operator;
-    apply: (...args: Expression[]) => NumberExpression;
 };
