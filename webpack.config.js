@@ -4,8 +4,10 @@ module.exports = {
     mode: 'development',
     entry: './src/index.ts',
     target: 'node',
+    devtool: 'inline-source-map',
     output: {
         path: path.resolve(__dirname, 'build'),
+
     },
     resolve: {
         extensions: ['.ts', '.js']
