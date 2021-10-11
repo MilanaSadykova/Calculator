@@ -3,10 +3,10 @@ import { NumberExpression } from "./NumberExpression";
 import { Operator } from "./Operator.enum";
 import { OperatorExpression } from "./OperatorExpression";
 
-// @ts-ignore TODO remove once bracket apply func is defined
-export const OPERATOR_APPLY: {
-    [key in Operator]: (...args: Expression[]) => NumberExpression
-} = {
+export const OPERATOR_APPLY: Record<
+    Exclude<Operator, Operator.CLOSE_BRACKET | Operator.OPEN_BRACKET>,
+    (...args: Expression[]) => NumberExpression
+> = {
     [Operator.PLUS]: (...args: Expression[]) => {
         const [leftOperand, rightOperand] = args as NumberExpression[];
         return {

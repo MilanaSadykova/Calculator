@@ -143,3 +143,69 @@ export const validate = (expressions: Expression[]): null => {
     }
     return null; // all good
 }
+
+/**
+ * Coded for valid expression array.
+ */
+export const calculate = (expressions: Expression[]): NumberExpression => {
+    let result: any;
+    /**
+     * Replace two adjacent expression to calculated result.
+     */
+    const calculateSubExpression = (expressions: Expression[]): NumberExpression => {
+        for (let i = 0; i < expressions.length; i++) {
+            const expression = expressions[i];
+            const leftOperand = expressions[i - 1];
+            const rightOperand = expressions[i + 1];
+            if (expression.value === Operator.POWER) {
+                result = OPERATOR_APPLY["^"](leftOperand, rightOperand);
+                expressions.splice(i - 1, 3, result);
+                continue;
+            } else if (expression.value === Operator.MULTIPLY) {
+                result = OPERATOR_APPLY["*"](leftOperand, rightOperand);
+                expressions.splice(i - 1, 3, result);
+                continue;
+            } else if (expression.value === Operator.DIVIDE) {
+                result = OPERATOR_APPLY["/"](leftOperand, rightOperand);
+                expressions.splice(i - 1, 3, result);
+                continue;
+            } else if (expression.value === Operator.PLUS) {
+                result = OPERATOR_APPLY["+"](leftOperand, rightOperand);
+                expressions.splice(i - 1, 3, result);
+                continue;
+            } else if (expression.value === Operator.MINUS) {
+                result = OPERATOR_APPLY["-"](leftOperand, rightOperand);
+                expressions.splice(i - 1, 3, result);
+                continue;
+            }
+        }
+        return result;
+    };
+    const bracket = expressions.findIndex(expression => expression.value === Operator.OPEN_BRACKET || expression.value === Operator.CLOSE_BRACKET);
+    if (bracket !== -1) {
+        let bracketDepth = 0;
+        let openBracketIndex = 0;
+        let closeBracketIndex = 0;
+        for (let i = 0; i < expressions.length; i++) {
+            const expression = expressions[i];
+            if (expression.value === Operator.OPEN_BRACKET) {
+                bracketDepth--;
+                openBracketIndex = i;
+                continue;
+            };
+            for (let i = openBracketIndex; i < expressions.length; i++) {
+                if (expression.value === Operator.CLOSE_BRACKET) {
+                    closeBracketIndex = i;
+                    continue;
+                }
+            }
+        }
+        const subExpression = expressions.slice(openBracketIndex, closeBracketIndex);
+        result = calculateSubExpression(subExpression);
+        expressions.splice(openBracketIndex, closeBracketIndex - openBracketIndex + 1, result);
+
+    } else {
+        calculateSubExpression(expressions);
+    }
+    return result.value;
+};
