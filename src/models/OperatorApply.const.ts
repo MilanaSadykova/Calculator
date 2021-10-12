@@ -1,10 +1,9 @@
 import { Expression, ExpressionType } from "./Expression";
 import { NumberExpression } from "./NumberExpression";
 import { Operator } from "./Operator.enum";
-import { OperatorExpression } from "./OperatorExpression";
 
 export const OPERATOR_APPLY: Record<
-    Exclude<Operator, Operator.CLOSE_BRACKET | Operator.OPEN_BRACKET>,
+    Operator,
     (...args: Expression[]) => NumberExpression
 > = {
     [Operator.PLUS]: (...args: Expression[]) => {
@@ -40,6 +39,20 @@ export const OPERATOR_APPLY: Record<
         return {
             type: ExpressionType.NUMBER,
             value: leftOperand.value ** rightOperand.value
+        }
+    },
+    // TODO mock for typescript, not used
+    [Operator.OPEN_BRACKET]: (...args: Expression[]) => {
+        return {
+            type: ExpressionType.NUMBER,
+            value: NaN,
+        }
+    },
+    // TODO mock for typescript, not used
+    [Operator.CLOSE_BRACKET]: (...args: Expression[]) => {
+        return {
+            type: ExpressionType.NUMBER,
+            value: NaN,
         }
     },
 }

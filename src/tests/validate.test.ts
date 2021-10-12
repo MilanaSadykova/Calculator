@@ -46,5 +46,14 @@ describe('validate function', () => {
                 expect((e as Error).message).toBe(`Validation: brackets mismatch, check that every bracket has pair`);
             }
         });
+        test(('() // empty'), () => {
+            const invalidExpression = parse('()');
+            try {
+                validate(invalidExpression as Expression[]);
+                throw new Error('Test passed for invalid scenario');
+            } catch (e) {
+                expect((e as Error).message).toBe(`Validation: invalid right operand ) at ( operator`);
+            }
+        });
     })
 })

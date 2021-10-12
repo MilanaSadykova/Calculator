@@ -54,8 +54,7 @@ describe('parse function', () => {
                 { "type": "operator", "value": ")" }
             ]
             const actual = parse('(1 + (2 - 3 / 3 * 1 ^ 3))');
-            expect(JSON.stringify(actual))
-                .toBe(JSON.stringify(expected));
+            expect(actual).toStrictEqual(expected);
         })
     })
 });

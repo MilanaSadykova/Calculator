@@ -1,7 +1,6 @@
+import { calculateExpressions } from "./calculateExpressions";
 import { Expression, ExpressionType } from "./models/Expression";
-import { NumberExpression } from "./models/NumberExpression";
 import { Operator } from './models/Operator.enum';
-import { OPERATOR_APPLY } from "./models/OperatorApply.const";
 import { OperatorExpression } from "./models/OperatorExpression";
 
 const numbersSet = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']);
@@ -105,7 +104,6 @@ export const validate = (expressions: Expression[]): null => {
                 continue;
             } else if (expression.value === Operator.OPEN_BRACKET) {
                 bracketsDepth++;
-                continue;
             }
             const leftOperand = expressions[i - 1];
             const rightOperand = expressions[i + 1];
@@ -129,6 +127,10 @@ export const validate = (expressions: Expression[]): null => {
                     isRightOperandValid = rightOperand?.type === ExpressionType.NUMBER
                         || leftOperand?.value === Operator.OPEN_BRACKET;
                     break;
+                case Operator.OPEN_BRACKET:
+                    isLeftOperandValid = true; // always ok
+                    isRightOperandValid = rightOperand?.value !== Operator.CLOSE_BRACKET;
+                    break;
             }
             if (!isLeftOperandValid) {
                 throw new Error(`Validation: invalid left operand ${leftOperand?.value || "'nothing'"} at ${expression.value} operator`);
@@ -144,68 +146,74 @@ export const validate = (expressions: Expression[]): null => {
     return null; // all good
 }
 
+
+const hasOpenBracket = (expressions: Expression[]): boolean =>
+    expressions.some(expression => expression.value === Operator.OPEN_BRACKET);
+
+const getDeepestExpressionIndecies = (expressions: Expression[]): [number, number] | null => {
+    let openBracketPosition = null;
+    let closeBracketPosition = null;
+    let depth = 0;
+    let topDepth = 0;
+    for (let i = 0; i < expressions.length; i++) {
+        const expression = expressions[i];
+        if (expression.value === Operator.OPEN_BRACKET) {
+            depth++;
+            if (depth > topDepth) {
+                topDepth = depth;
+                openBracketPosition = i;
+            }
+        } else if (expression.value === Operator.CLOSE_BRACKET) {
+            depth--;
+        }
+    }
+    if (openBracketPosition === null) {
+        return null;
+    }
+    for (let i = openBracketPosition; i < expressions.length; i++) {
+        const expression = expressions[i];
+        if (expression.value === Operator.CLOSE_BRACKET) {
+            closeBracketPosition = i;
+            break;
+        }
+    }
+    return [openBracketPosition + 1, closeBracketPosition as number - 1];
+};
+
 /**
  * Coded for valid expression array.
  */
-export const calculate = (expressions: Expression[]): NumberExpression => {
-    let result: any;
-    /**
-     * Replace two adjacent expression to calculated result.
-     */
-    const calculateSubExpression = (expressions: Expression[]): NumberExpression => {
-        for (let i = 0; i < expressions.length; i++) {
-            const expression = expressions[i];
-            const leftOperand = expressions[i - 1];
-            const rightOperand = expressions[i + 1];
-            if (expression.value === Operator.POWER) {
-                result = OPERATOR_APPLY["^"](leftOperand, rightOperand);
-                expressions.splice(i - 1, 3, result);
-                continue;
-            } else if (expression.value === Operator.MULTIPLY) {
-                result = OPERATOR_APPLY["*"](leftOperand, rightOperand);
-                expressions.splice(i - 1, 3, result);
-                continue;
-            } else if (expression.value === Operator.DIVIDE) {
-                result = OPERATOR_APPLY["/"](leftOperand, rightOperand);
-                expressions.splice(i - 1, 3, result);
-                continue;
-            } else if (expression.value === Operator.PLUS) {
-                result = OPERATOR_APPLY["+"](leftOperand, rightOperand);
-                expressions.splice(i - 1, 3, result);
-                continue;
-            } else if (expression.value === Operator.MINUS) {
-                result = OPERATOR_APPLY["-"](leftOperand, rightOperand);
-                expressions.splice(i - 1, 3, result);
-                continue;
-            }
+export const calculateExpressionsWithBrackets = (initExpressions: Expression[]): number => {
+    const expressions: Expression[] = [...initExpressions];
+    while (hasOpenBracket(expressions)) {
+        const deepestExpressionIndices = getDeepestExpressionIndecies(expressions);
+        if (deepestExpressionIndices !== null) {
+            const [subExpressionsStartIndex, subExpressionsEndIndex] = deepestExpressionIndices;
+            const expressionResult = calculateExpressions(
+                expressions.slice(subExpressionsStartIndex, subExpressionsEndIndex + 1)
+            );
+            expressions.splice(
+                subExpressionsStartIndex - 1,
+                subExpressionsEndIndex - subExpressionsStartIndex + 3,
+                expressionResult,
+            );
         }
-        return result;
-    };
-    const bracket = expressions.findIndex(expression => expression.value === Operator.OPEN_BRACKET || expression.value === Operator.CLOSE_BRACKET);
-    if (bracket !== -1) {
-        let bracketDepth = 0;
-        let openBracketIndex = 0;
-        let closeBracketIndex = 0;
-        for (let i = 0; i < expressions.length; i++) {
-            const expression = expressions[i];
-            if (expression.value === Operator.OPEN_BRACKET) {
-                bracketDepth--;
-                openBracketIndex = i;
-                continue;
-            };
-            for (let i = openBracketIndex; i < expressions.length; i++) {
-                if (expression.value === Operator.CLOSE_BRACKET) {
-                    closeBracketIndex = i;
-                    continue;
-                }
-            }
-        }
-        const subExpression = expressions.slice(openBracketIndex, closeBracketIndex);
-        result = calculateSubExpression(subExpression);
-        expressions.splice(openBracketIndex, closeBracketIndex - openBracketIndex + 1, result);
-
-    } else {
-        calculateSubExpression(expressions);
     }
-    return result.value;
-};
+    const finalResult = calculateExpressions(expressions);
+    return finalResult.value as number;
+}
+
+/**
+ * Throw Exception if expression is not valid. 
+ */
+export const calculate = (expression: string): number | null => {
+    const parsedExpression = parse(expression);
+    if (parsedExpression === null) {
+        return null;
+    }
+    const isValid = validate(parsedExpression);
+    if (isValid !== null) { // won't happen, TS check
+        return null;
+    }
+    return calculateExpressionsWithBrackets(parsedExpression);
+}
