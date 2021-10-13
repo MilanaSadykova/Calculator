@@ -2,6 +2,9 @@ import { Expression, ExpressionType } from "./Expression";
 import { NumberExpression } from "./NumberExpression";
 import { Operator } from "./Operator.enum";
 
+/**
+ * Defines how operators apply to expressions.
+ */
 export const OPERATOR_APPLY: Record<
     Operator,
     (...args: Expression[]) => NumberExpression

@@ -1,4 +1,4 @@
-import { parse } from "src/calculator";
+import { parse } from "src/parse";
 
 describe('parse function', () => {
     describe('should return null on empty input', () => {

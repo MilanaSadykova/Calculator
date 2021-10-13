@@ -1,4 +1,4 @@
-import { isOperator } from "src/calculator";
+import { isOperator } from "src/isOperator";
 
 describe('isOperator function', () => {
     describe('should return false for invalid input', () => {

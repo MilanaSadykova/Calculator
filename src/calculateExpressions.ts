@@ -1,29 +1,67 @@
-import { Expression, ExpressionType } from "./models/Expression";
-import { NumberExpression } from "./models/NumberExpression";
+import { calculateBracketlessExpression } from "./calculateBracketlessExpression";
+import { Expression } from "./models/Expression";
 import { Operator } from "./models/Operator.enum";
-import { OPERATOR_APPLY } from "./models/OperatorApply.const";
-import { OperatorExpression } from "./models/OperatorExpression";
-
-const applyOperatorsInExpressions = (operator: Operator, expressions: Expression[]): void => {
-    for (let i = 0; i < expressions.length; i++) {
-        const expression = expressions[i];
-        if (expression.value === operator) {
-            const subResult = OPERATOR_APPLY[operator](expressions[i - 1], expressions[i + 1]);
-            expressions.splice(i - 1, 3, subResult);
-            i -= 1; // to get to next value after splice
-        }
-    }
-}
 
 /**
- * Calculate expressions without brackets.
+ * Check is expressions has open bracket.
  */
-export const calculateExpressions = (initExpressions: Expression[]): NumberExpression => {
-    const expressions = [...initExpressions];
-    applyOperatorsInExpressions(Operator.POWER, expressions);
-    applyOperatorsInExpressions(Operator.DIVIDE, expressions);
-    applyOperatorsInExpressions(Operator.MULTIPLY, expressions);
-    applyOperatorsInExpressions(Operator.MINUS, expressions);
-    applyOperatorsInExpressions(Operator.PLUS, expressions);
-    return expressions[0] as NumberExpression;
+const hasOpenBracket = (initExpressions: Expression[]): boolean =>
+    initExpressions.some(expression => expression.value === Operator.OPEN_BRACKET);
+
+/**
+ * Get expressions between deepest bracket in init expressions.
+ */
+const getDeepestExpressionIndices = (initExpressions: Expression[]): [number, number] | null => {
+    let openBracketPosition = null;
+    let closeBracketPosition = null;
+    let depth = 0;
+    let topDepth = 0;
+    for (let i = 0; i < initExpressions.length; i++) {
+        const expression = initExpressions[i];
+        if (expression.value === Operator.OPEN_BRACKET) {
+            depth++;
+            if (depth > topDepth) {
+                topDepth = depth;
+                openBracketPosition = i;
+            }
+        } else if (expression.value === Operator.CLOSE_BRACKET) {
+            depth--;
+        }
+    }
+    if (openBracketPosition === null) {
+        return null;
+    }
+    for (let i = openBracketPosition; i < initExpressions.length; i++) {
+        const expression = initExpressions[i];
+        if (expression.value === Operator.CLOSE_BRACKET) {
+            closeBracketPosition = i;
+            break;
+        }
+    }
+    return [openBracketPosition + 1, closeBracketPosition as number - 1];
 };
+
+/**
+ * Calculate expressions consisting of numbers and operators.
+ */
+export const calculateExpressions = (initExpressions: Expression[]): number => {
+    const expressions: Expression[] = [...initExpressions];
+    while (hasOpenBracket(expressions)) {
+        const deepestExpressionIndices = getDeepestExpressionIndices(expressions);
+        if (deepestExpressionIndices !== null) {
+            const [subExpressionsStartIndex, subExpressionsEndIndex] = deepestExpressionIndices;
+            const expressionResult = calculateBracketlessExpression(
+                expressions.slice(subExpressionsStartIndex, subExpressionsEndIndex + 1)
+            );
+            expressions.splice(
+                subExpressionsStartIndex - 1,
+                subExpressionsEndIndex - subExpressionsStartIndex + 3,
+                expressionResult,
+            );
+        }
+    }
+    const finalResult = calculateBracketlessExpression(expressions);
+    return finalResult.value as number;
+};
+
+

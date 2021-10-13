@@ -1,4 +1,4 @@
-import { isNumber } from "src/calculator";
+import { isNumber } from "src/isNumber";
 
 describe('isNumber function', () => {
     describe('should return false for invalid input', () => {

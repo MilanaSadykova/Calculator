@@ -1,4 +1,5 @@
-import { parse, validate } from "src/calculator"
+import { parse } from "src/parse";
+import { validate } from "src/validate";
 import { Expression } from "src/models/Expression";
 
 describe('validate function', () => {

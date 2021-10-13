@@ -1,17 +1,12 @@
-import { calculateExpressionsWithBrackets, parse } from 'src/calculator';
-import { Expression } from 'src/models/Expression';
+import { calculate } from "src/calculate";
 
-describe(('calculateExpressionsWithBrackets function'), () => {
-    test('(2 + 2) * (12 - (2 + 2) * 2)', () => {
-        const actual = calculateExpressionsWithBrackets(
-            parse('(2 + 2) * (12 - (2 + 2) * 2)') as Expression[]
-        );
-        expect(actual).toBe(16);
+describe(('calculate function'), () => {
+    test(('2+5-(9/2-3)*4^2'), () => {
+        const actual = calculate('2+5-(9/2-3)*4^2');
+        expect(actual).toBe(-17);
     })
-    test('(2 ^ 3)', () => {
-        const actual = calculateExpressionsWithBrackets(
-            parse('(2 ^ 3)') as Expression[]
-        );
-        expect(actual).toBe(8);
+    test(('1/0'), () => {
+        const actual = calculate('1/0');
+        expect(actual).toBe(Infinity);
     })
-})
+});
